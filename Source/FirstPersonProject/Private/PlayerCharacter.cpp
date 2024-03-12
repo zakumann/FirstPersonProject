@@ -27,42 +27,6 @@ APlayerCharacter::APlayerCharacter()
 	FirstPersonCameraComponent->SetupAttachment(GetCapsuleComponent());
 	FirstPersonCameraComponent->SetRelativeLocation(FVector(0.f, 0.f, 70.f)); // Position the camera
 	FirstPersonCameraComponent->bUsePawnControlRotation = true;
-
-	CrouchEyeOffset = FVector(0.f);
-	CrouchSpeed = 12.f;
-}
-
-void APlayerCharacter::OnStartCrouch(float HalfHeightAdjust, float ScaledHalfHeightAdjust)
-{
-	if (HalfHeightAdjust == 0.f)
-	{
-		return;
-	}
-	float StartBaseEyeHeight = BaseEyeHeight;
-	Super::OnStartCrouch(HalfHeightAdjust, ScaledHalfHeightAdjust);
-	CrouchEyeOffset.Z += StartBaseEyeHeight - BaseEyeHeight + HalfHeightAdjust;
-	FirstPersonCameraComponent->SetRelativeLocation(FVector(0.f, 0.f, BaseEyeHeight), false);
-}
-
-void APlayerCharacter::OnEndCrouch(float HalfHeightAdjust, float ScaledHalfHeightAdjust)
-{
-	if (HalfHeightAdjust == 0.f)
-	{
-		return;
-	}
-	float StartBaseEyeHeight = BaseEyeHeight;
-	Super::OnEndCrouch(HalfHeightAdjust, ScaledHalfHeightAdjust);
-	CrouchEyeOffset.Z += StartBaseEyeHeight - BaseEyeHeight - HalfHeightAdjust;
-	FirstPersonCameraComponent->SetRelativeLocation(FVector(0.f, 0.f, BaseEyeHeight), false);
-}
-
-void APlayerCharacter::CalcCamera(float DeltaTime, FMinimalViewInfo& OutResult)
-{
-	if (FirstPersonCameraComponent)
-	{
-		FirstPersonCameraComponent->GetCameraView(DeltaTime, OutResult);
-		OutResult.Location += CrouchEyeOffset;
-	}
 }
 
 // Called when the game starts or when spawned
@@ -79,13 +43,42 @@ void APlayerCharacter::BeginPlay()
 		}
 	}
 }
-void APlayerCharacter::Move(const FInputActionValue& Value)
+void APlayerCharacter::MoveForward(const FInputActionValue& Value)
 {
 	FVector2D MovementVector = Value.Get<FVector2D>();
 
 	if (Controller != nullptr)
 	{
 		AddMovementInput(GetActorForwardVector(), MovementVector.Y);
+	}
+}
+
+void APlayerCharacter::MoveBackward(const FInputActionValue& Value)
+{
+	FVector2D MovementVector = Value.Get<FVector2D>();
+
+	if (Controller != nullptr)
+	{
+		AddMovementInput(GetActorForwardVector(), MovementVector.Y);
+	}
+}
+
+void APlayerCharacter::MoveRight(const FInputActionValue& Value)
+{
+	FVector2D MovementVector = Value.Get<FVector2D>();
+
+	if (Controller != nullptr)
+	{
+		AddMovementInput(GetActorRightVector(), MovementVector.X);
+	}
+}
+
+void APlayerCharacter::MoveLeft(const FInputActionValue& Value)
+{
+	FVector2D MovementVector = Value.Get<FVector2D>();
+
+	if (Controller != nullptr)
+	{
 		AddMovementInput(GetActorRightVector(), MovementVector.X);
 	}
 }
@@ -103,7 +96,7 @@ void APlayerCharacter::Look(const FInputActionValue& Value)
 
 void APlayerCharacter::Sprint()
 {
-	GetCharacterMovement()->MaxWalkSpeed = 1000.0f;
+	GetCharacterMovement()->MaxWalkSpeed = 1200.0f;
 }
 
 void APlayerCharacter::StopSprint()
@@ -111,23 +104,10 @@ void APlayerCharacter::StopSprint()
 	GetCharacterMovement()->MaxWalkSpeed = 600.f;
 }
 
-void APlayerCharacter::StartCrouch()
-{
-	Crouch();
-}
-
-void APlayerCharacter::StopCrouch()
-{
-	UnCrouch();
-}
-
 // Called every frame
 void APlayerCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-
-	float CrouchInterpTime = FMath::Min(1.f, CrouchSpeed * DeltaTime);
-	CrouchEyeOffset = (1.f - CrouchInterpTime) * CrouchEyeOffset;
 }
 
 // Called to bind functionality to input
@@ -141,14 +121,14 @@ void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCom
 		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Started, this, &ACharacter::Jump);
 		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Completed, this, &ACharacter::StopJumping);
 		// Moving
-		EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Triggered, this, &APlayerCharacter::Move);
+		EnhancedInputComponent->BindAction(IA_Forward, ETriggerEvent::Triggered, this, &APlayerCharacter::MoveForward);
+		EnhancedInputComponent->BindAction(IA_Backward, ETriggerEvent::Triggered, this, &APlayerCharacter::MoveBackward);
+		EnhancedInputComponent->BindAction(IA_Right, ETriggerEvent::Triggered, this, &APlayerCharacter::MoveRight);
+		EnhancedInputComponent->BindAction(IA_Left, ETriggerEvent::Triggered, this, &APlayerCharacter::MoveLeft);
 		// Looking
 		EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &APlayerCharacter::Look);
 		//Sprint
 		EnhancedInputComponent->BindAction(SprintAction, ETriggerEvent::Started, this, &APlayerCharacter::Sprint);
 		EnhancedInputComponent->BindAction(SprintAction, ETriggerEvent::Completed, this, &APlayerCharacter::StopSprint);
-		//Crouch
-		EnhancedInputComponent->BindAction(CrouchAction, ETriggerEvent::Started, this, &APlayerCharacter::StartCrouch);
-		EnhancedInputComponent->BindAction(CrouchAction, ETriggerEvent::Completed, this, &APlayerCharacter::StopCrouch);
 	}
 }
