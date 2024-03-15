@@ -1,7 +1,7 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "Player/PlayerCharacter.h"
+#include "FirstPersonProject/Player/PlayerCharacter.h"
 #include "Camera/CameraComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "Components/StaticMeshComponent.h"
@@ -29,7 +29,7 @@ APlayerCharacter::APlayerCharacter()
 	FirstPersonCameraComponent->SetRelativeLocation(FVector(0.f, 0.f, 70.f)); // Position the camera
 	FirstPersonCameraComponent->bUsePawnControlRotation = true;
 
-	meshComp = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("ArmMesh"));
+	meshComp = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("GunMesh"));
 	meshComp->SetupAttachment(FirstPersonCameraComponent);
 }
 
