@@ -28,9 +28,6 @@ APlayerCharacter::APlayerCharacter()
 	FirstPersonCameraComponent->SetupAttachment(GetCapsuleComponent());
 	FirstPersonCameraComponent->SetRelativeLocation(FVector(0.f, 0.f, 70.f)); // Position the camera
 	FirstPersonCameraComponent->bUsePawnControlRotation = true;
-
-	meshComp = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("GunMesh"));
-	meshComp->SetupAttachment(FirstPersonCameraComponent);
 }
 
 // Called when the game starts or when spawned
@@ -94,7 +91,7 @@ void APlayerCharacter::Look(const FInputActionValue& Value)
 	if (Controller != nullptr)
 	{
 		AddControllerYawInput(LookAxisVector.X);
-		AddControllerPitchInput(-LookAxisVector.Y);
+		AddControllerPitchInput(LookAxisVector.Y);
 	}
 }
 
